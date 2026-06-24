@@ -1,0 +1,49 @@
+{
+  "name": "Dhakaflix-Nuvio",
+  "version": "1.0.0",
+  "scrapers": [
+    {
+      "id": "dhakaflix-main",
+      "name": "DhakaFlix",
+      "description": "DhakaFlix local BDIX Movies and TV series streaming zone (SAMOnline network)",
+      "version": "1.0.0",
+      "author": "LocalCommunity",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/dhakaflix.js",
+      "enabled": true,
+      "hasSettings": true,
+      "formats": ["mp4", "mkv"],
+      "logo": "https://i.postimg.cc/XqCZyCgp/dhakaflix.png",
+      "contentLanguage": ["en", "bn"]
+    },
+    {
+      "id": "dhakaflix-livetv",
+      "name": "DhakaFlix Live TV",
+      "description": "BDIX connected Live IP-TV stream channels (Direct portal mapping)",
+      "version": "1.0.2",
+      "author": "LocalCommunity",
+      "supportedTypes": ["tv"],
+      "filename": "providers/dhakaflixtv.js",
+      "enabled": true,
+      "hasSettings": false,
+      "formats": ["m3u8"],
+      "logo": "https://i.postimg.cc/brxL7qg3/dhakaflixtv.png",
+      "contentLanguage": ["bn", "en"]
+    },
+    {
+      "id": "samonline-ftp",
+      "name": "SAMOnline Media",
+      "description": "Direct high-speed local FTP resolution for SAMOnline/Dhakaflix sub-networks",
+      "version": "1.1.0",
+      "author": "Xyr0nX",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/samonlineftp.js",
+      "enabled": true,
+      "hasSettings": true,
+      "limited": true,
+      "formats": ["mkv", "mp4"],
+      "logo": "https://i.postimg.cc/d1vkPZpY/samonline.png",
+      "contentLanguage": ["en", "bn", "hi"]
+    }
+  ]
+}
