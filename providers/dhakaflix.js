@@ -1,11 +1,10 @@
 /**
  * Dhakaflix / SAMOnline BDIX Media Scraper Module for Nuvio
- * Re-architected for strict Nuvio sandbox compliance (No async/await, exports getStreams)
+ * Re-architected to match the exact runtime signature of the Nuvio core sandbox environment.
  */
 
-const P_MAIN = "dhakaflix-main";
-const P_LIVETV = "dhakaflix-livetv";
-const P_FTP = "samonline-ftp";
+const BASE_URL = "http://172.16.50.14";
+const TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 
 const ENDPOINTS = {
     movies_sd: "http://172.16.50.14/DHAKA-FLIX-7",
@@ -21,104 +20,90 @@ function toTitleCase(str) {
     });
 }
 
-/**
- * Core Nuvio Entry Method
- * @param {string} tmdbId - Target Media ID
- * @param {string} mediaType - Type of media ('movie', 'tv', 'series')
- * @param {number} season - Season number
- * @param {number} episode - Episode number
- */
-function getStreams(tmdbId, mediaType, season, episode) {
-    return new Promise(function(resolve, reject) {
-        var results = [];
+async function getStreams(tmdbId, mediaType, season, episode) {
+    try {
+        // 1. Resolve Name/Title dynamically via TMDB API context
+        const tmdbUrl = `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${TMDB_API_KEY}`;
+        const mediaInfo = await (await fetch(tmdbUrl, { skipSizeCheck: true })).json();
+        const title = mediaInfo.title || mediaInfo.name;
 
-        // Fallback translation if Nuvio passes Title in an object structure or metadata
-        var titleQuery = "";
-        if (typeof tmdbId === 'object' && tmdbId.title) {
-            titleQuery = tmdbId.title.trim();
-        } else if (global.currentMediaTitle) {
-            titleQuery = global.currentMediaTitle; // Fallback helper hook
-        } else {
-            // If Nuvio passes an ID, we assume standard matching hook.
-            // Note: For local offline metadata title string resolution, ensure your context includes query strings.
-            titleQuery = tmdbId;
+        if (!title) return [];
+
+        const streams = [];
+        const lowerTitle = encodeURIComponent(title.toLowerCase());
+        const titleCased = encodeURIComponent(toTitleCase(title));
+
+        // 2. Handle Live TV IPTV Route mapping
+        if (mediaType === 'tv' && !season && !episode) {
+            streams.push({
+                url: `${ENDPOINTS.livetv}/${lowerTitle}.m3u8`,
+                quality: "1080p",
+                title: `${title} [BDIX IPTV]`,
+                subtitles: []
+            });
+            return streams;
         }
 
-        var lowerTitle = encodeURIComponent(titleQuery.toLowerCase());
-        var titleCased = encodeURIComponent(toTitleCase(titleQuery));
+        // 3. Handle Movie Paths
+        if (mediaType === 'movie') {
+            streams.push({
+                url: `${ENDPOINTS.movies_hd}/ENGLISH%20MOVIES%20%281080P%29/${titleCased}.mkv`,
+                quality: "1080p",
+                title: `DhakaFlix [${title} - 1080p Bluray]`,
+                subtitles: []
+            });
 
-        try {
-            // 1. Live TV Configuration Map
-            if (mediaType === 'tv' && !season && !episode) {
-                results.push({
-                    provider: P_LIVETV,
-                    title: titleQuery + " [BDIX IPTV]",
-                    url: ENDPOINTS.livetv + "/" + lowerTitle + ".m3u8",
-                    quality: "1080p",
-                    format: "m3u8",
-                        isLive: true
-                });
-                return resolve(results);
-            }
+            streams.push({
+                url: `${ENDPOINTS.movies_hd}/ENGLISH%20MOVIES%20%281080P%29/${lowerTitle}.mkv`,
+                quality: "1080p",
+                title: `DhakaFlix [${title} - 1080p Alt]`,
+                subtitles: []
+            });
 
-            // 2. Movie Architecture Map
-            if (mediaType === 'movie') {
-                results.push({
-                    provider: P_MAIN,
-                    title: titleQuery + " (1080p Bluray) [DhakaFlix]",
-                             url: ENDPOINTS.movies_hd + "/ENGLISH%20MOVIES%20%281080P%29/" + titleCased + ".mkv",
-                             quality: "1080p",
-                             format: "mkv"
-                });
+            streams.push({
+                url: `${ENDPOINTS.movies_sd}/ENGLISH%20MOVIES/${titleCased}.mp4`,
+                quality: "720p",
+                title: `DhakaFlix [${title} - 720p BRRip]`,
+                subtitles: []
+            });
 
-                results.push({
-                    provider: P_MAIN,
-                    title: titleQuery + " (1080p Alt) [DhakaFlix]",
-                             url: ENDPOINTS.movies_hd + "/ENGLISH%20MOVIES%20%281080P%29/" + lowerTitle + ".mkv",
-                             quality: "1080p",
-                             format: "mkv"
-                });
-
-                results.push({
-                    provider: P_MAIN,
-                    title: titleQuery + " (720p BRRip) [DhakaFlix]",
-                             url: ENDPOINTS.movies_sd + "/ENGLISH%20MOVIES/" + titleCased + ".mp4",
-                             quality: "720p",
-                             format: "mp4"
-                });
-            }
-
-            // 3. TV / Series Architecture Map
-            else if (mediaType === 'series' || mediaType === 'tv') {
-                var padS = String(season || 1).padStart(2, '0');
-                var padE = String(episode || 1).padStart(2, '0');
-                var seasonStr = "Season%20" + padS;
-                var episodeStr = "E" + padE;
-
-                results.push({
-                    provider: P_MAIN,
-                    title: titleQuery + " - " + episodeStr + " [DhakaFlix Series]",
-                    url: ENDPOINTS.series + "/" + titleCased + "/" + seasonStr + "/" + episodeStr + ".mkv",
-                    quality: "720p",
-                    format: "mkv"
-                });
-
-                results.push({
-                    provider: P_MAIN,
-                    title: titleQuery + " - " + episodeStr + " (Alt) [DhakaFlix Series]",
-                             url: ENDPOINTS.series + "/" + lowerTitle + "/" + seasonStr + "/" + episodeStr + ".mkv",
-                             quality: "720p",
-                             format: "mkv"
-                });
-            }
-
-            resolve(results);
-
-        } catch (error) {
-            console.log("[DhakaFlix Sandbox Error] " + error.message);
-            resolve([]); // Always resolve an empty array on catch so the core thread doesn't hang
+            // SAMOnline Direct FTP Backup
+            streams.push({
+                url: `http://172.16.50.4/Movies/${titleCased}.mkv`,
+                quality: "Source",
+                title: `SAMOnline FTP [${title}]`,
+                subtitles: []
+            });
         }
-    });
+
+        // 4. Handle TV Show / Series Paths
+        else if (mediaType === 'series' || mediaType === 'tv') {
+            const padS = String(season || 1).padStart(2, '0');
+            const padE = String(episode || 1).padStart(2, '0');
+            const seasonStr = `Season%20${padS}`;
+            const episodeStr = `E${padE}`;
+
+            streams.push({
+                url: `${ENDPOINTS.series}/${titleCased}/${seasonStr}/${episodeStr}.mkv`,
+                quality: "720p",
+                title: `DhakaFlix [${title} - S${padS}${episodeStr}]`,
+                subtitles: []
+            });
+
+            streams.push({
+                url: `${ENDPOINTS.series}/${lowerTitle}/${seasonStr}/${episodeStr}.mkv`,
+                quality: "720p",
+                title: `DhakaFlix [${title} - S${padS}${episodeStr} Alt]`,
+                subtitles: []
+            });
+        }
+
+        return streams;
+
+    } catch (e) {
+        console.error("[DhakaFlix Engine Error]", e);
+        return [];
+    }
 }
 
 module.exports = { getStreams };
