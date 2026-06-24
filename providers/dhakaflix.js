@@ -7,10 +7,10 @@ const BASE_URL = "http://172.16.50.14";
 const TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49";
 
 const ENDPOINTS = {
-    movies_sd: "http://172.16.50.14/DHAKA-FLIX-7",
-    movies_hd: "http://172.16.50.14/DHAKA-FLIX-14",
-    series:    "http://172.16.50.12/TV-WEB-SERIES",
-    anime:     "http://172.16.50.12/ANIME-CARTOON",
+    movies_sd: "http://172.16.50.7/DHAKA-FLIX-7/English%20Movies/",
+    movies_hd: "http://172.16.50.14/DHAKA-FLIX-14/English%20Movies%20%281080p%29/",
+    series:    "http://172.16.50.12/DHAKA-FLIX-12/TV-WEB-Series/",
+    anime:     "http://172.16.50.9/DHAKA-FLIX-9/Anime%20%26%20Cartoon%20TV%20Series/",
     livetv:    "http://172.16.29.28/live"
 };
 
