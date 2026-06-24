@@ -2,38 +2,32 @@
 const scraper = require('./dhakaflix.js');
 
 async function runTests() {
-    console.log("🚀 Starting Dhakaflix Scraper Validation...\n");
+    console.log("🚀 Running Expanded TV Series Validation...\n");
 
-    // Mock Queries matching Nuvio core payload signatures
     const testCases = [
         {
-            name: "Movie Test (HD & SD Fallbacks)",
-            query: { title: "Inception", type: "movie" }
+            name: "TV Show Test 1: Mixed Case with Spaces (House of the Dragon)",
+            args: [{ title: "House of the Dragon" }, "series", 2, 4]
         },
         {
-            name: "TV Show/Series Test (Season & Episode Structure)",
-            query: { title: "Breaking Bad", type: "series", season: 1, episode: 5 }
-        },
-        {
-            name: "Live IPTV Channel Routing Test",
-            query: { title: "Somoy TV", type: "tv", isLive: true }
+            name: "TV Show Test 2: Standard Sci-Fi Series (The Mandalorian)",
+            args: [{ title: "The Mandalorian" }, "series", 3, 1]
         }
     ];
 
     for (const tc of testCases) {
         console.log(`--------------------------------------------------`);
         console.log(`🧪 Running Test Case: ${tc.name}`);
-        console.log(`Parameters:`, JSON.stringify(tc.query, null, 2));
 
         try {
-            const streams = await scraper.scrap(tc.query);
+            const streams = await scraper.getStreams(...tc.args);
 
             if (!Array.isArray(streams)) {
                 console.error("❌ FAIL: Scraper did not return an array.");
                 continue;
             }
 
-            console.log(`✅ SUCCESS: Found ${streams.length} stream definitions.`);
+            console.log(`✅ SUCCESS: Found ${streams.length} directory path variations.`);
 
             streams.forEach((stream, idx) => {
                 console.log(`\n  [Stream #${idx + 1}]`);
