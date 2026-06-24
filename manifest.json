@@ -12,14 +12,14 @@
         "movie",
         "tv"
       ],
-      "filename": "src/providers/dhakaflix.js",
+      "filename": "providers/dhakaflix.js",
       "enabled": true,
       "formats": [
         "mp4",
         "mkv",
         "m3u8"
       ],
-      "logo": "https://i.postimg.cc/XqCZyCgp/dhakaflix.png",
+      "logo": "https://i.imgur.com/9bGkGMi.png",
       "contentLanguage": [
         "en",
         "bn"
